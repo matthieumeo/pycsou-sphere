@@ -1,7 +1,7 @@
 .. image:: /images/pycsou.png
   :width: 50 %
   :align: center
-  :target: https://github.com/matthieumeo/pycsou-gsp
+  :target: https://github.com/matthieumeo/pycsou-sphere
 
 .. image:: https://zenodo.org/badge/277582581.svg
    :target: https://zenodo.org/badge/latestdoi/277582581
