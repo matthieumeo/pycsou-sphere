@@ -1,4 +1,4 @@
-.. image:: https://matthieumeo.github.io/pycsou/html/_images/pycsou.png
+.. image:: /images/pycsou.png
   :width: 50 %
   :align: center
   :target: https://github.com/matthieumeo/pycsou-gsp
@@ -7,18 +7,20 @@
    :target: https://zenodo.org/badge/latestdoi/277582581
 
 
-*Pycsou-gsp* is the graph signal processing extension of the Python 3 package `Pycsou <https://github.com/matthieumeo/pycsou>`_ for solving linear inverse problems. The extension offers implementations of graph *convolution* and *differential* operators, compatible with Pycsou's interface for linear operators. Such tools can be useful when solving linear inverse problems involving signals defined on non Euclidean discrete manifolds.
+*Pycsou-sphere* is an extension module of the Python 3 package `Pycsou <https://github.com/matthieumeo/pycsou>`_ for solving linear inverse problems on the sphere. The extension offers implementations of spherical zonal *convolution* operators as well as the spherical harmonic and Fourier-Legendre transforms (all compatible with Pycsou's interface for linear operators). It also provides numerical routines for computing the Green kernels of common spherical pseudo-differential operators and generating spherical meshes/point sets. 
 
-Graphs in *Pycsou-gsp* are instances from the class ``pygsp.graphs.Graph`` from the `pygsp <https://github.com/epfl-lts2/pygsp>`_ library for graph signal processing with Python. 
+This module heavily relies and follows similar conventions as the `healpy <https://healpy.readthedocs.io/en/latest/index.html>`_ package for spherical signal processing with Python. 
 
 Content
 -------
 
 The package is organised as follows:
 
-1. The subpackage ``pycsou_gsp.linop`` implements the following common graph linear operators:
+1. The subpackage ``pycsphere.linop`` implements the following common spherical linear operators:
   
-   * Graph convolution operators: ``GraphConvolution``
-   * Graph differential operators: ``GraphLaplacian``, ``GraphGradient``, ``GeneralisedGraphLaplacian``.
+   * Convolution operators,
+   * Spherical transforms and their inverses.
 
-2. The subpackage ``pycsou_gsp.tesselation`` provides routines for generating graphs from discrete tessellations of continuous manifolds such as the sphere. 
+2. The subpackage ``pycsphere.mesh`` provides routines for generating spherical meshes. 
+3. The subpackage ``pycsphere.green`` provides numerical routines for computing the Green  kernels of common spherical pseudo-differential operators.
+
