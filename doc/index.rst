@@ -7,22 +7,22 @@
    :target: https://zenodo.org/badge/latestdoi/277582581
 
 
-*Pycsou-gsp* is the graph signal processing extension of the Python 3 package `Pycsou <https://github.com/matthieumeo/pycsou>`_ for solving linear inverse problems. The extension offers implementations of graph *convolution* and *differential* operators, compatible with Pycsou's interface for linear operators. Such tools can be useful when solving linear inverse problems involving signals defined on non Euclidean discrete manifolds.
+*Pycsou-sphere* is an extension module of the Python 3 package `Pycsou <https://github.com/matthieumeo/pycsou>`_ for solving linear inverse problems on the sphere. The extension offers implementations of spherical zonal *convolution* operators as well as the spherical harmonic and Fourier-Legendre transforms (all compatible with Pycsou's interface for linear operators). It also provides numerical routines for computing the Green kernels of common spherical pseudo-differential operators and generating spherical meshes/point sets. 
 
-Graphs in *Pycsou-gsp* are instances from the class ``pygsp.graphs.Graph`` from the `pygsp <https://github.com/epfl-lts2/pygsp>`_ library for graph signal processing with Python. 
+This module heavily relies and follows similar conventions as the `healpy <https://healpy.readthedocs.io/en/latest/index.html>`_ package for spherical signal processing with Python. 
 
 Content
 -------
 
 The package is organised as follows:
 
-1. The subpackage ``pycsou_gsp.linop`` implements the following common graph linear operators:
+1. The subpackage ``pycsphere.linop`` implements the following common spherical linear operators:
   
-   * Graph convolution operators: :py:class:`~pycsou_gsp.linop.conv.GraphConvolution`
-   * Graph differential operators: :py:class:`~pycsou_gsp.linop.diff.GraphLaplacian`, :py:class:`~pycsou_gsp.linop.diff.GraphGradient`, :py:class:`~pycsou_gsp.linop.diff.GeneralisedGraphLaplacian`.
+   * Convolution operators: :py:class:`~pycsphere.linop.ZonalSphericalConvolution`, :py:class:`~pycsphere.linop.Zonal2ZonalSphericalConvolution`
+   * Spherical transforms and their inverse: :py:class:`~pycsphere.linop.SphericalHarmonicTransform`, :py:class:`~pycsphere.linop.iSphericalHarmonicTransform`, :py:class:`~pycsphere.linop.FourierLegendreTransform` and :py:class:`~pycsphere.linop.iFourierLegendreTransform`.
 
-2. The subpackage ``pycsou_gsp.tesselation`` provides routines for generating graphs from discrete tessellations of continuous manifolds such as the sphere. 
-   
+2. The subpackage ``pycsphere.mesh`` provides routines for generating spherical meshes: :py:class:`~pycsphere.mesh.__init__.FibonacciPointSet`, :py:class:`~pycsphere.mesh.__init__.HEALPixPointSet`, :py:class:`~pycsphere.mesh.__init__.RandomPointSet`. 
+3. The subpackage ``pycsphere.green`` provides numerical routines for computing the Green  kernels of common spherical pseudo-differential operators.
 
 .. toctree::
    :maxdepth: 1

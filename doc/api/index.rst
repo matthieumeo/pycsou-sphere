@@ -1,9 +1,8 @@
-Pycsou-gsp API
-##############
+Pycsou-sphere API
+#################
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   operators/index
-   tessellations/index
+   meshes/index

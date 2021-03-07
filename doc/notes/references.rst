@@ -1,4 +1,4 @@
 References
 ==========
 
-.. [FuncSphere] Simeoni, Matthieu Martin Jean-Andre. Functional Inverse Problems on Spheres: Theory, Algorithms and Applications. No. THESIS. EPFL, 2020.
+.. [PointSets] Hardin, Doug P., T. J. Michaels, and Edward B. Saff. "A Comparison of Popular Point Configurations on S2." arXiv preprint arXiv:1607.04590 (2016).

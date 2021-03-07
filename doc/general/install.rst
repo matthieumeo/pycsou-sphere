@@ -3,12 +3,12 @@
 Installation
 ============
 
-Pycsou-gsp requires Python 3.6 or greater.It is developed and tested on x86_64 systems running MacOS and Linux.
+Pycsou-sphere requires Python 3.6 or greater.It is developed and tested on x86_64 systems running MacOS and Linux.
 
 
 Dependencies
 ------------
-Before installing Pycsou-gsp, make sure that the base package Pycsou is correctly installed on your machine. Installation instructions for Pycsou are available at `that link <https://matthieumeo.github.io/pycsou/html/general/install.html>`_. 
+Before installing Pycsou-sphere, make sure that the base package Pycsou is correctly installed on your machine. Installation instructions for Pycsou are available at `that link <https://matthieumeo.github.io/pycsou/html/general/install.html>`_. 
 
 The package extra dependencies are listed in the files ``requirements.txt`` and ``requirements-conda.txt``. 
 It is recommended to install those extra dependencies using `Miniconda <https://conda.io/miniconda.html>`_ or
@@ -24,11 +24,11 @@ is not just a pure stylistic choice but comes with some *hidden* advantages, suc
 Quick Install
 -------------
 
-Pycsou-gsp is also available on `Pypi <https://pypi.org/project/pycsou-gsp/>`_. You can hence install it very simply via the command: 
+Pycsou-sphere is also available on `Pypi <https://pypi.org/project/pycsou-sphere/>`_. You can hence install it very simply via the command: 
 
 .. code-block:: bash
    
-   >> pip install pycsou-gsp
+   >> pip install pycsou-sphere
 
 If you have previously activated your conda environment ``pip`` will install Pycsou in said environment. Otherwise it will install it in your base environment together with the various dependencies obtained from the file ``requirements.txt``.
 
@@ -36,12 +36,12 @@ If you have previously activated your conda environment ``pip`` will install Pyc
 Developper Install
 ------------------
 
-It is also possible to install Pycsou-gsp from the source for developpers: 
+It is also possible to install Pycsou-sphere from the source for developpers: 
 
 
 .. code-block:: bash
    
-   >> git clone https://github.com/matthieumeo/pycsou-gsp
+   >> git clone https://github.com/matthieumeo/pycsou-sphere
    >> cd <repository_dir>/
    >> pip install -e .
 
