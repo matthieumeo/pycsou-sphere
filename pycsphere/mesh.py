@@ -1,6 +1,6 @@
 # #############################################################################
-# __init__.py
-# ===========
+# mesh.py
+# =======
 # Author : Matthieu Simeoni [matthieu.simeoni@gmail.com]
 # #############################################################################
 
@@ -393,7 +393,7 @@ class FibonacciPointSet(SphericalPointSet):
 
         """
         resolution = cls.angle2res(angular_resolution=angular_resolution, deg=deg)
-        return np.floor((resolution - 1) / 2)
+        return np.ceil((resolution - 1) / 2)
 
     def __init__(self, N: int, lonlat: bool = False):
         r"""
@@ -403,7 +403,7 @@ class FibonacciPointSet(SphericalPointSet):
         N: int
             Defines the point set resolution :math:`2N+1`.
         lonlat: bool
-            Convention for the spherical coordinates (see help of :py:func:`~pycsphere.mesh.__init__.SphericalPointSet.__init__`).
+            Convention for the spherical coordinates (see help of :py:func:`~pycsphere.mesh.SphericalPointSet.__init__`).
         """
         separation = self.separation_cst / np.sqrt(2 * N + 1)
         nodal_width = self.nodal_width_cst / np.sqrt(2 * N + 1)
@@ -483,7 +483,7 @@ class HEALPixPointSet(SphericalPointSet):
 
         """
         resolution = cls.angle2res(angular_resolution=angular_resolution, deg=deg)
-        return np.ceil(np.sqrt(resolution / 12)).astype(int)
+        return (2 ** np.ceil(np.log2(np.sqrt(resolution / 12)))).astype(int)
 
     def __init__(self, nside: int, lonlat: bool = False, nest=False):
         r"""
@@ -491,9 +491,12 @@ class HEALPixPointSet(SphericalPointSet):
         Parameters
         ----------
         nside: int
-            Defines the point set resolution ``12 * nside ** 2``.
+            Defines the point set resolution ``12 * nside ** 2``.  ``nside`` must be a power of two.
         lonlat: bool
-            Convention for the spherical coordinates (see help of :py:func:`~pycsphere.mesh.__init__.SphericalPointSet.__init__`).
+            Convention for the spherical coordinates (see help of :py:func:`~pycsphere.mesh.SphericalPointSet.__init__`).
+        nest: bool
+            If ``True``, the HEALPix mesh is stored in NESTED ordering (efficient for pixel querying routines).
+            If ``False``, the HEALPix mesh is stored in RING ordering (efficient for spherical harmonics transforms).
         """
         resolution = int(hp.nside2npix(nside))
         separation = self.separation_cst / resolution
@@ -566,7 +569,7 @@ class RandomPointSet(SphericalPointSet):
         seed: int
             Seed for reproducibility of the random point set.
         lonlat: bool
-            Convention for the spherical coordinates (see help of :py:func:`~pycsphere.mesh.__init__.SphericalPointSet.__init__`).
+            Convention for the spherical coordinates (see help of :py:func:`~pycsphere.mesh.SphericalPointSet.__init__`).
         """
         resolution = N
         separation = self.separation_cst / resolution

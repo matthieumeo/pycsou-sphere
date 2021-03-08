@@ -1,7 +1,7 @@
 Spherical Meshes
 ================
 
-.. automodule:: pycsphere.mesh.__init__
+.. automodule:: pycsphere.mesh
    :special-members: __init__
 
 	.. autosummary:: 

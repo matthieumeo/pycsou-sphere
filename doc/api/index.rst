@@ -5,4 +5,5 @@ Pycsou-sphere API
    :maxdepth: 1
    :hidden:
 
-   meshes/index
+   linop
+   meshes
