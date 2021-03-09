@@ -300,8 +300,120 @@ SHT = SphericalHarmonicTransform
 
 
 class FourierLegendreTransform(LinearOperator):
+    r"""
+    Fourier Legendre Transform (FLT).
+
+    Compute the Fourier Legendre Transform of a function :math:`f:[0,\pi]\to\mathbb{C}`. This is useful for computing the
+    spherical harmonics coefficients of spherical zonal functions of the form :math:`g(\mathbf{r})=f(\langle\mathbf{r}, \mathbf{s}\rangle)`.
+    Indeed, for such functions, we have:
+
+    .. math::
+
+        \hat{g}_n^m=\hat{f}_n \sqrt{\frac{2n+1}{4\pi}}\delta_n^0, \quad \forall n,m,
+
+    where :math:`\hat{f}_n` are the Fourier-Legendre coefficients of :math:`f`.  Moreover, from the Fourier-Legendre expansion we have also:
+
+    .. math::
+
+        f(\langle\mathbf{r}, \mathbf{s}\rangle)=\sum_{n=0}^{+\infty} \hat{f}_n\frac{2n+1}{4\pi} P_n(\langle\mathbf{r}, \mathbf{s}\rangle).
+
+    Examples
+    --------
+
+    .. plot::
+
+        import healpy as hp
+        import numpy as np
+        from pycsphere.linop import FLT
+        import matplotlib.pyplot as plt
+
+        theta = np.linspace(0, np.pi, 4096)
+        b = (theta <= np.pi / 4)
+        flt = FLT(n_max=40, theta=theta)
+        bn = flt(b)
+        trunc_fl_series = flt.adjoint(bn)
+        plt.figure()
+        plt.plot(theta, b)
+        plt.xlabel('$\\theta$')
+        plt.title('Original Signal')
+        plt.figure()
+        plt.stem(np.arange(flt.n_max + 1), bn)
+        plt.xlabel('$n$')
+        plt.title('Fourier-Legendre coefficients')
+        plt.figure()
+        plt.plot(theta, trunc_fl_series)
+        plt.xlabel('$\\theta$')
+        plt.title('Truncated Fourier-Legendre Expansion')
+
+    .. plot::
+
+        import healpy as hp
+        import numpy as np
+        from pycsphere.linop import FLT
+        import matplotlib.pyplot as plt
+
+        theta = np.linspace(0, np.pi, 4096)
+        bn = np.ones(21)
+        flt = FLT(n_max=20, theta=theta)
+        b = flt.adjoint(bn)
+        plt.figure()
+        plt.stem(np.arange(flt.n_max + 1), bn)
+        plt.xlabel('$n$')
+        plt.title('Fourier-Legendre coefficients')
+        plt.figure()
+        plt.plot(theta, b)
+        plt.xlabel('$\\theta$')
+        plt.title('Fourier-Legendre Expansion')
+
+
+    Notes
+    -----
+    Let :math:`\{P_{n,d}:[-1,1]\rightarrow\mathbb{C}, \, n\in\mathbb{N}\}` be the *Legendre polynomials*.
+    Then, any  function :math:`b\in\mathcal{L}^2([0, \pi], \mathbb{C})` admits a *Fourier-Legendre expansion* given by
+
+    .. math::
+
+        b(\theta)\stackrel{a.e.}{=}\sum_{n=0}^{+\infty} \hat{b}_n\,\frac{2n+1}{4\pi} P_{n}(\cos\theta),
+
+    where the *Fourier-Legendre coefficients* are given by the *Fourier-Legendre transform*
+
+    .. math::
+
+        \hat{b}_n:=2\pi \int_{0}^\pi b(\theta) P_{n}(\cos\theta) sin\theta \,d\theta, \quad n\geq 0.
+
+    The Fourier-Legendre transform is computed with the routine
+    :py:func:`healpy.sphtfunc.beam2bl` which leverages a
+    recurrence relationship for computing efficiently Legendre polynomials, and a trapezoidal rule for approximating the integral.
+    The inverse (adjoint) Fourier-Legendre transform could be computed via the function :py:func:`healpy.sphtfunc.bl2beam` but the latter
+    has `a bug which discards the last coefficient <https://github.com/healpy/healpy/issues/666>`_.
+    We therefore propose a correct implementation here, pending a fix in the healpy library.
+
+    Warnings
+    --------
+    Using this function with ``n_max`` smaller than the function's bandwidth may result in aliasing/smoothing artefacts.
+
+    See Also
+    --------
+    :py:class:`~pycsphere.linop.FLT`, :py:class:`~pycsphere.linop.SphericalHarmonicTransform`
+    """
 
     def __init__(self, n_max: int, theta: np.ndarray, dtype: type = np.float64):
+        r"""
+
+        Parameters
+        ----------
+        n_max: int
+            Maximal Fourier-Legendre coefficient index :math:`n`.
+        theta: np.ndarray
+            Grid of :math:`[0,\pi]` used to approximate the integral when computing the Fourier-Legendre coefficients.
+        dtype: type
+            Data type of the operator.
+
+        Raises
+        ------
+        Warning
+            If the resolution of ``theta`` is too crude for the chosen ``n_max``.
+        """
         self.n_max = n_max
         self.theta = theta
         self._nside = SphericalHarmonicTransform.nmax2nside(n_max)
@@ -312,16 +424,42 @@ class FourierLegendreTransform(LinearOperator):
                                                        lipschitz_cst=1)
 
     def __call__(self, b: np.ndarray) -> np.ndarray:
+        r"""
+        Compute the Fourier-Legendre coefficients :math:`\{\hat{b}_n, n=0,\ldots, n_{max}\}`.
+
+        Parameters
+        ----------
+        b: np.ndarray
+            Function :math:`b` sampled at the points ``theta``.
+
+        Returns
+        -------
+        np.ndarray
+            The Fourier-Legendre coefficients :math:`\{\hat{b}_n, n=0,\ldots, n_{max}\}`.
+        """
         return hp.beam2bl(beam=b, theta=self.theta, lmax=self.n_max)
 
     def adjoint(self, bn: np.ndarray) -> np.ndarray:
+        r"""
+        Compute the Fourier-Legendre series truncated at ``n_max``.
+
+        Parameters
+        ----------
+        bn: np.ndarray
+            Fourier-Legendre coefficients :math:`\{\hat{b}_n, n=0,\ldots, n_{max}\}`.
+
+        Returns
+        -------
+        np.ndarray
+            The Fourier-Legendre series truncated at ``n_max``.
+        """
         x = np.cos(self.theta)
         p0 = np.zeros(self.theta.size, dtype=np.dtype) + 1
         p1 = x
 
         b = bn[0] * p0 + bn[1] * p1 * 3
 
-        for n in np.arange(2, n_max + 1):
+        for n in np.arange(2, self.n_max + 1):
             p2 = (x * p1 * (2 * n - 1) - p0 * (n - 1)) / n
             p0 = p1
             p1 = p2
@@ -335,28 +473,4 @@ class FourierLegendreTransform(LinearOperator):
 FLT = FourierLegendreTransform
 
 if __name__ == '__main__':
-    import healpy as hp
-    import numpy as np
-    from pycsphere.linop import SHT
-    import matplotlib.pyplot as plt
-    from pycsou.linop import MappedDistanceMatrix
-    from scipy.interpolate import interp1d
-    from pycsphere.mesh import HEALPixPointSet
-
-    n_max = 20
-    nside = SHT.nmax2nside(n_max)
-    rng = np.random.default_rng(0)
-    map = 100 * rng.binomial(n=1, p=0.01, size=int(hp.nside2npix(nside=nside)))
-    map = hp.smoothing(map, beam_window=np.ones(shape=(3 * n_max // 4,)))
-    # theta = np.linspace(0, np.pi, 2048)
-    # dirichlet_beam = hp.bl2beam(bl=np.ones(shape=(n_max + 2,)), theta=theta)
-    # dirichlet_beam = interp1d(theta, dirichlet_beam)
-    # dirichlet_sphere = lambda t: dirichlet_beam(np.arccos(t))
-    # map = MappedDistanceMatrix(samples1=HEALPixPointSet(nside=nside).vec.transpose(), function=dirichlet_sphere,
-    #                            samples2=np.array([0, 0, 1])[None, :], mode='zonal', operator_type='dense').mat.squeeze()
-    sht = SHT(n_max=n_max)
-    anm = sht(map)
-    synth_map = sht.adjoint(anm)
-    hp.mollview(map=map, title='Input Map', cmap='viridis')
-    sht.plot_anm(anm)
-    hp.mollview(map=map, title='Synthesised Map', cmap='viridis')
+    pass

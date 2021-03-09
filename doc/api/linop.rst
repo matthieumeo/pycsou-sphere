@@ -14,3 +14,6 @@ Spherical Linear Operators
 
    .. autosummary:: 
       SphericalHarmonicTransform
+      SHT
+      FourierLegendreTransform
+      FLT

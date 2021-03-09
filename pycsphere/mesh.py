@@ -194,6 +194,10 @@ class SphericalPointSet(ABC):
             Transparency of the cell faces.
         seed: int
             Seed for random coloring reproducibility.
+
+        Warnings
+        --------
+        This method can be **very slow** for large point sets (>10'000 points)!
         """
         self.plot_voronoi_cells(facecmap=facecmap, ncols=ncols, edgecolor=edgecolor,
                                 cell_centers=cell_centers, markercolor=markercolor, markersize=markersize,
@@ -226,6 +230,10 @@ class SphericalPointSet(ABC):
            Transparency of the cell faces.
        seed: int
            Seed for random coloring reproducibility.
+
+       Warnings
+       --------
+       This method can be **very slow** for large point sets (>10'000 points)!
        """
         vec = self.vec.transpose()
         delaunay = sp.ConvexHull(vec)
@@ -261,6 +269,10 @@ class SphericalPointSet(ABC):
            Transparency of the cell faces.
        seed: int
            Seed for random coloring reproducibility.
+
+       Warnings
+       --------
+       This method can be **very slow** for large point sets (>10'000 points)!
        """
         voronoi = sp.SphericalVoronoi(self.vec.transpose(), radius=1)
         voronoi.sort_vertices_of_regions()
@@ -362,6 +374,10 @@ class FibonacciPointSet(SphericalPointSet):
     a definition of the point set). The Fibonacci point set is defined for odd resolutions :math:`2N+1` only. It is well-separated, has good covering and is hence quasi-uniform. It is also
     equidistributed. Its Voronoi cells are however irregular and do not have the same shape/area. The points are not arranged on isolatitude
     tracks. Finally it is non hierarchical (Fibonacci point sets at two different resolutions are not contained in one another).
+
+    .. todo::
+
+       Add support for local Fibonacci meshes.
     """
     separation_cst = 3.09206862
     nodal_width_cst = 2.72812463
@@ -452,6 +468,10 @@ class HEALPixPointSet(SphericalPointSet):
     It is well-separated, has good covering and is hence quasi-uniform. It is also equidistributed. Its tessellation cells are
     moreover regular and have the same shape/area. Finally it is hierarchical (point sets at two different resolutions
     are nested in one another).
+
+    .. todo::
+
+       Add spatial filtering routines for local HEALPix meshes.
     """
     separation_cst = 2.8345
     nodal_width_cst = 2.8345
