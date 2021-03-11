@@ -11,6 +11,13 @@ Spherical Linear Operators
       ZonalSphericalConvolution
       SphericalPooling
 
+   .. rubric:: Differential Operators
+
+   .. autosummary:: 
+      
+      DiscreteSphericalLaplacian
+      DiscreteSphericalGradient
+
    .. rubric:: Transforms
 
    .. autosummary:: 

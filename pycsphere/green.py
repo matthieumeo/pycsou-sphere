@@ -389,6 +389,11 @@ class ZonalGreenSobolev(ZonalGreenFunction):
             zonal_green.plot(angles=True, fhandle=2)
         plt.legend([f'$\\beta={np.round(val, 1)}$' for val in [2,2.5,3,3.5,4]])
         plt.title('$\\alpha=5$')
+
+    Notes
+    -----
+    We have in this case :math:`\hat{D}_n=(\alpha^2+n(n+1))^{\beta/2},`  :math:`\hat{D}_n>0`, :math:`|\hat{D}_n|=\Theta(n^{\beta})`,
+    and :math:`\mathcal{K}_{\mathcal{D}}=\emptyset`.
     """
     def __init__(self, alpha: Union[float, int], exponent: Union[int, float],
                  rtol: float = 1e-4, cutoff: Optional[int] = None):
@@ -435,7 +440,11 @@ class ZonalGreenFractionalLaplaceBeltrami(ZonalGreenSobolev):
 
     Notes
     -----
+    We have in this case :math:`\hat{D}_n=(n(n+1))^{\beta/2},`  :math:`\hat{D}_n\geq 0`, :math:`|\hat{D}_n|=\Theta(n^{\beta})`,
+    and :math:`\mathcal{K}_{\mathcal{D}}=\{0\}`.
     See Example 4.2 of [FuncSphere]_ for a closed-form formula of the zonal Green kernel for :math:`\beta=4`.
+    The case :math:`\beta=1` yields the square-root of the Laplace-Beltrami operator, which is intimately linked to the spherical
+    *divergence* and *gradient* differential operators.
 
     See Also
     --------
@@ -458,7 +467,7 @@ class ZonalGreenFractionalLaplaceBeltrami(ZonalGreenSobolev):
 
 class ZonalGreenIteratedLaplaceBeltrami(ZonalGreenFunction):
     r"""
-    Zonal Green kernel of the iterated Laplace-Beltrami operator :math:`\Delta_{\mathbb{S}^2}^{n}`.
+    Zonal Green kernel of the iterated Laplace-Beltrami operator :math:`\Delta_{\mathbb{S}^2}^{k}`.
 
     Examples
     --------
@@ -470,11 +479,13 @@ class ZonalGreenIteratedLaplaceBeltrami(ZonalGreenFunction):
         for exp in [1,2,3,4,5]:
             zonal_green=ZonalGreenIteratedLaplaceBeltrami(exponent=exp)
             zonal_green.plot(angles=True, fhandle=1)
-        plt.legend([f'$n={np.round(val, 1)}$' for val in [1,2,3,4,5]])
+        plt.legend([f'$k={np.round(val, 1)}$' for val in [1,2,3,4,5]])
 
     Notes
     -----
-    See Example 4.2 of [FuncSphere]_ for a closed-form formula of the zonal Green kernel for :math:`n=2`.
+    We have in this case :math:`\hat{D}_n=(-n(n+1))^{k},`  :math:`\hat{D}_n\in \mathbb{R}`, :math:`|\hat{D}_n|=\Theta(n^{2k})`,
+    and :math:`\mathcal{K}_{\mathcal{D}}=\{0\}`.
+    See Example 4.2 of [FuncSphere]_ for a closed-form formula of the zonal Green kernel for :math:`k=2`.
 
     See Also
     --------
@@ -486,7 +497,7 @@ class ZonalGreenIteratedLaplaceBeltrami(ZonalGreenFunction):
         Parameters
         ----------
         exponent: int
-            Exponent :math:`n\geq 1.`
+            Exponent :math:`k\geq 1.`
         rtol: float
             Threshold for defining the effective bandwidth of the zonal Green kernel.
         cutoff: Optional[int]
@@ -521,6 +532,8 @@ class ZonalGreenBeltrami(ZonalGreenFunction):
 
     Notes
     -----
+    We have in this case :math:`\hat{D}_n=k(k+1)-n(n+1),`  :math:`\hat{D}_n\in \mathbb{R}`, :math:`|\hat{D}_n|=\Theta(n^{2})`,
+    and :math:`\mathcal{K}_{\mathcal{D}}=\{k\}`.
     See Chapter 4 of [FuncSphere]_ for properties of Beltrami operators.
 
     See Also
@@ -568,6 +581,8 @@ class ZonalGreenIteratedBeltrami(ZonalGreenFunction):
 
     Notes
     -----
+    We have in this case :math:`\hat{D}_n=\Pi_{j=0}^k j(j+1)-n(n+1),`  :math:`\hat{D}_n\in \mathbb{R}`, :math:`|\hat{D}_n|=\Theta(n^{2(k+1)})`,
+    and :math:`\mathcal{K}_{\mathcal{D}}=\{0,\ldots,k\}`.
     See Chapter 4 of [FuncSphere]_ for properties of Beltrami operators.
 
     See Also
@@ -602,6 +617,9 @@ class ZonalMatern(Radial2Zonal):
     r"""
     Matern zonal Green kernel.
 
+    The Matern zonal Green kernel is obtained by restricting the radial Matern function :py:class:`pycsou.math.green.Matern`
+    to the sphere as described in :py:class:`pycsphere.green.Radial2Zonal`.
+
     Examples
     --------
 
@@ -621,7 +639,7 @@ class ZonalMatern(Radial2Zonal):
 
     Notes
     -----
-    See Chapter 8 of [FuncSphere]_ for definitions and properties.
+    See Chapter 8 of [FuncSphere]_ for definitions, closed-form formulas and properties.
 
     See Also
     --------
@@ -640,6 +658,10 @@ class ZonalMatern(Radial2Zonal):
             Threshold for defining the effective bandwidth of the zonal Green kernel.
         cutoff: Optional[int]
             Effective bandwidth of the zonal Green kernel.
+
+        Notes
+        -----
+        See the help of :py:class:`pycsou.math.green.Matern` for more details on the parameters ``k`` and ``epsilon``.
         """
         super(ZonalMatern, self).__init__(radial_green=Matern(k=k, epsilon=epsilon), order=k + 3 / 2, cutoff=cutoff,
                                           rtol=rtol)
@@ -648,6 +670,9 @@ class ZonalMatern(Radial2Zonal):
 class ZonalWendland(Radial2Zonal):
     r"""
     Wendland zonal Green kernel.
+
+    The Wendland zonal Green kernel is obtained by restricting the radial Wendland function :py:class:`pycsou.math.green.Wendland`
+    to the sphere as described in :py:class:`pycsphere.green.Radial2Zonal`.
 
     Examples
     --------
@@ -668,7 +693,7 @@ class ZonalWendland(Radial2Zonal):
 
     Notes
     -----
-    See Chapter 8 of [FuncSphere]_ for definitions and properties.
+    See Chapter 8 of [FuncSphere]_ for definitions, closed-form formulas and properties.
 
     See Also
     --------
@@ -687,6 +712,9 @@ class ZonalWendland(Radial2Zonal):
             Threshold for defining the effective bandwidth of the zonal Green kernel.
         cutoff: Optional[int]
             Effective bandwidth of the zonal Green kernel.
+        Notes
+        -----
+        See the help of :py:class:`pycsou.math.green.Wendland` for more details on the parameters ``k`` and ``epsilon``.
         """
         super(ZonalWendland, self).__init__(radial_green=Wendland(k=k, epsilon=epsilon), order=k + 3 / 2, cutoff=cutoff,
                                             rtol=rtol)

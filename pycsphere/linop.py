@@ -15,6 +15,9 @@ from healpy.pixelfunc import ud_grade
 from typing import Optional, Callable, Union
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix
+from pycgsp.linop.diff import GraphLaplacian, GraphGradient, GeneralisedGraphLaplacian
+from pycgsp.graph import cvxhull_graph, healpix_nngraph
+from pycsphere.mesh import SphericalPointSet, HEALPixPointSet
 
 
 class ZonalSphericalConvolution(LinearOperator):
@@ -209,6 +212,89 @@ class SphericalPooling(LinearOperator):
     def adjoint(self, pooled_map: np.ndarray) -> np.ndarray:
         return ud_grade(map_in=pooled_map, nside_out=self.nside_in, order_in=self.order_out, order_out=self.order_in,
                         dtype=self.dtype)
+
+
+class DiscreteSphericalLaplacian(GraphLaplacian):
+    r"""
+    Discrete spherical Laplacian.
+
+    Finite-difference approximation of the continuous spherical Laplacian for a map defined over a
+    :py:class:`~pycsphere.mesh.SphericalPointSet`.
+
+    Examples
+    --------
+
+    .. plot::
+
+        import healpy as hp
+        import numpy as np
+        from pycsphere.mesh import HEALPixPointSet
+        from pycsphere.linop import DiscreteSphericalLaplacian
+
+        nside = 16
+        rng = np.random.default_rng(0)
+        map_in = rng.binomial(n=1, p=0.005, size=hp.nside2npix(nside=nside))
+        map_in = hp.smoothing(map_in, sigma=10 * np.pi / 180)
+        laplacian = DiscreteSphericalLaplacian(point_set=HEALPixPointSet(nside=nside))
+        map_d2 = laplacian(map_in)
+        hp.mollview(map=map_in, title='Input Map', cmap='viridis')
+        hp.mollview(map=np.abs(map_d2), title='Magnitude of Laplacian Map', cmap='viridis')
+
+    Notes
+    -----
+    The discrete Laplacian is computed as the Laplacian of the spherical point set's graph `Pycsou-gsp tessellation graphs <https://matthieumeo.github.io/pycsou-gsp/html/api/graphs/index.html#module-pycgsp.graph.__init__>`_ using
+    :py:class:`pycgsp.linop.diff.GraphLaplacian`.
+
+    """
+
+    def __init__(self, point_set: SphericalPointSet, dtype: type = np.float64):
+        r"""
+
+        Parameters
+        ----------
+        point_set: SphericalPointSet
+            Spherical point set on which the signal is defined.
+        dtype: type
+            Input type.
+        """
+        if isinstance(point_set, HEALPixPointSet):
+            graph, _ = healpix_nngraph(nside=point_set.nside, cheb_normalized=False, compute_differential_operator=False)
+        else:
+            graph, _ = cvxhull_graph(R=point_set.vec.transpose(), cheb_normalized=False,
+                                  compute_differential_operator=False)
+        super(DiscreteSphericalLaplacian, self).__init__(Graph=graph, dtype=dtype)
+
+
+class DiscreteSphericalGradient(GraphGradient):
+    r"""
+    Discrete spherical gradient.
+
+    Finite-difference approximation of the continuous spherical gradient for a map defined over a
+    :py:class:`~pycsphere.mesh.SphericalPointSet`.
+
+    Notes
+    -----
+    The discrete gradient is computed as the gradient of the spherical point set's graph (see `Pycsou-gsp tessellation graphs <https://matthieumeo.github.io/pycsou-gsp/html/api/graphs/index.html#module-pycgsp.graph.__init__>`_)
+    using :py:class:`pycgsp.linop.diff.GraphGradient`.
+
+    """
+
+    def __init__(self, point_set: SphericalPointSet, dtype: type = np.float64):
+        r"""
+
+        Parameters
+        ----------
+        point_set: SphericalPointSet
+            Spherical point set on which the signal is defined.
+        dtype: type
+            Input type.
+        """
+        if isinstance(point_set, HEALPixPointSet):
+            graph, _ = healpix_nngraph(nside=point_set.nside, cheb_normalized=False, compute_differential_operator=True)
+        else:
+            graph, _ = cvxhull_graph(R=point_set.vec.transpose(), cheb_normalized=False,
+                                  compute_differential_operator=True)
+        super(DiscreteSphericalGradient, self).__init__(Graph=graph, dtype=dtype)
 
 
 class SphericalHarmonicTransform(LinearOperator):
@@ -623,5 +709,6 @@ class FourierLegendreTransform(LinearOperator):
 
 FLT = FourierLegendreTransform
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass
+

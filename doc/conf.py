@@ -107,6 +107,7 @@ intersphinx_mapping = {
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "pycsou": ("https://matthieumeo.github.io/pycsou/html/", None),
+    "pycgsp": ("https://matthieumeo.github.io/pycsou-gsp/html/", None),
     "healpy": ("https://healpy.readthedocs.io/en/latest/", None)
 }
 
