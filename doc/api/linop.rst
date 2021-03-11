@@ -7,7 +7,8 @@ Spherical Linear Operators
    .. rubric:: Convolution/Pooling
 
    .. autosummary:: 
-   
+      
+      ZonalSphericalConvolution
       SphericalPooling
 
    .. rubric:: Transforms

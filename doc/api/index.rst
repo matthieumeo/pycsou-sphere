@@ -7,3 +7,4 @@ Pycsou-sphere API
 
    linop
    meshes
+   green

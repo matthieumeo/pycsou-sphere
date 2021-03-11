@@ -1,3 +1,13 @@
+# #############################################################################
+# linop.py
+# ========
+# Author : Matthieu Simeoni [matthieu.simeoni@gmail.com]
+# #############################################################################
+
+r"""
+Common spherical linear operators.
+"""
+
 from pycsou.core import LinearOperator
 import numpy as np
 import healpy as hp
@@ -5,6 +15,125 @@ from healpy.pixelfunc import ud_grade
 from typing import Optional, Callable, Union
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix
+
+
+class ZonalSphericalConvolution(LinearOperator):
+    r"""
+    Zonal spherical convolution.
+
+    Compute the convolution between a bandlimited *zonal kernel* :math:`\psi(\langle\mathbf{r},\mathbf{s}\rangle)` and a bandlimited *spherical map* :math:`f(\mathbf{r})`:
+
+    .. math::
+
+        \left\{\psi\ast f\right\}(\mathbf{r})=\int_{\mathbb{S}^{2}}\psi(\langle\mathbf{r},\mathbf{s}\rangle)f(\mathbf{s})\,d\mathbf{s},\quad \forall \mathbf{r}\in\mathbb{S}^{2}.
+
+    Examples
+    --------
+
+    .. plot::
+
+        import healpy as hp
+        import numpy as np
+        from pycsphere.linop import SHT, FLT, ZonalSphericalConvolution
+        import matplotlib.pyplot as plt
+        from scipy.interpolate import interp1d
+
+        n_max = 30
+        nside = SHT.nmax2nside(n_max)
+        rng = np.random.default_rng(0)
+        map_in = 100 * rng.binomial(n=1, p=0.01, size=int(hp.nside2npix(nside=nside)))
+        n=np.arange(2000)
+        spectral_window=1/(100+n*(n+1))**2
+        flt=FLT(n_max=1999, t=np.linspace(-1,1,2048))
+        zonal_filter=flt.adjoint(spectral_window)
+        zonal_filter_interp=interp1d(flt.t, zonal_filter, assume_sorted=True)
+        convOp = ZonalSphericalConvolution(size=map_in.size, spectral_window=spectral_window)
+        map_smoothed = convOp(map_in)
+        map_bismoothed = convOp.adjoint(map_smoothed)
+        hp.mollview(map=map_in, title='Input Map', cmap='viridis')
+        plt.figure()
+        theta=np.linspace(-np.pi, np.pi, 1024)
+        plt.plot(theta, zonal_filter_interp(np.cos(theta)))
+        plt.title('Angular section of Zonal Filter')
+        hp.mollview(map=map_smoothed, title='Smoothed Map', cmap='viridis')
+        hp.mollview(map=map_bismoothed, title='Backprojected Smoothed Map', cmap='viridis')
+
+
+    Notes
+    -----
+    The ``ZonalSphericalConvolution`` operator is *self-adjoint* and can be computed efficiently in the spherical harmonic domain:
+
+    .. math::
+        \left\{\psi\ast f\right\}(\mathbf{r})&=\int_{\mathbb{S}^{2}}\psi(\langle\mathbf{r},\mathbf{s}\rangle)f(\mathbf{s})\,d\mathbf{s}\\
+        &= \sum_{n=0}^N\hat{\psi}_n\sum_{m=-n}^n \hat{f}_n^m Y_n^m(\mathbf{r}),\quad \forall \mathbf{r}\in\mathbb{S}^{2},
+
+    where :math:`N` is the maximum between the bandwidth of :math:`f` and :math:`\psi`. To perform this computation, we use
+    the routine :py:func:`healpy.sphtfunc.smoothing` which assumes a RING-ordered HEALPix discretisation of :math:`f`.
+
+    Warnings
+    --------
+    * This class is for *real* spherical maps :math:`f` **only**.
+    * Using this operator on non-bandlimited spherical maps :math:`f` incurs aliasing.
+    * HEALPix maps used as inputs must be **RING ordered**.
+
+    See Also
+    --------
+    :py:class:`~pycsphere.linop.SphericalHarmonicTransform`, :py:class:`~pycsphere.linop.FourierLegendreTransform`,
+    :py:class:`~pycsphere.linop.BiZonalSphericalConvolution`
+    """
+
+    def __init__(self, size: int, spectral_window: Optional[np.ndarray] = None,
+                 zonal_filter: Optional[np.ndarray] = None,
+                 n_filter: Optional[int] = None, sigma: Optional[float] = None, use_weights: bool = False):
+        r"""
+
+        Parameters
+        ----------
+        size: int
+            Size of the RING-ordered, HEALPix-discretised sherical map :math:`f`.
+        spectral_window: Optional[np.ndarray]
+            Fourier-Legendre coefficients :math:`\hat{\psi}_n` of the zonal filter. Overrides ``zonal_filter``, ``n_filter``
+            and ``sigma``.
+        zonal_filter: Optional[np.ndarray]
+            Zonal filter :math:`\psi` discretised on [-1,1]. Overrides ``sigma``.
+        n_filter: Optional[int]
+            Bandwidth of the zonal filter :math:`\psi`. Only used if ``zonal_filter`` is specified.
+        sigma: float
+             Standard deviation of a Gaussian filter in radians.
+        use_weights: bool
+            If ``True``, use the ring weighting quadrature rule when computing the spherical harmonic transform.
+
+        Notes
+        -----
+        The zonal filter can be specified in three ways:
+
+            1. Via its Fourier-Legendre coefficients (keyword ``spectral_window``).
+            2. Via its discretisation on [-1,1] and its bandwidth  (keywords ``zonal_filter`` and ``n_filter``).
+            3. As a spherical Gaussian filter with standard deviation ``sigma`` in radians.
+
+        If keywords from multiple scenarios are used, 1. overrides  2. and 3. and 2. overrides 3.
+        """
+        self.size = size
+        self.use_weights = use_weights
+        self.sigma = None
+        if spectral_window is not None:
+            self.window = spectral_window
+        elif zonal_filter is not None and n_filter is not None:
+            flt = FLT(n_max=n_filter, t=np.linspace(-1, 1, zonal_filter.size))
+            self.window = flt(zonal_filter)
+        elif sigma is not None:
+            self.sigma = sigma
+            self.window = None
+        else:
+            raise ValueError('Invalid filter specification.')
+        super(ZonalSphericalConvolution, self).__init__(shape=(self.size, self.size))
+
+    def __call__(self, map_in: np.ndarray, verbose: bool = False) -> np.ndarray:
+        return hp.smoothing(map_in=map_in, sigma=self.sigma, beam_window=self.window, use_weights=self.use_weights,
+                            verbose=verbose)
+
+    def adjoint(self, map_in: np.ndarray) -> np.ndarray:
+        return self.__call__(map_in=map_in)
 
 
 class SphericalPooling(LinearOperator):
@@ -24,12 +153,12 @@ class SphericalPooling(LinearOperator):
 
         nside = 16
         rng = np.random.default_rng(0)
-        map = rng.binomial(n=1, p=0.2, size=hp.nside2npix(nside=nside))
-        map = hp.smoothing(map, sigma=10 * np.pi / 180)
+        map_in = rng.binomial(n=1, p=0.2, size=hp.nside2npix(nside=nside))
+        map_in = hp.smoothing(map_in, sigma=10 * np.pi / 180)
         pool = SphericalPooling(nside_in=nside, nside_out=8, pooling_func='sum')
-        pooled_map = pool(map)
+        pooled_map = pool(map_in)
         backprojected_map = pool.adjoint(pooled_map)
-        hp.mollview(map=map, title='Input Map', cmap='viridis')
+        hp.mollview(map=map_in, title='Input Map', cmap='viridis')
         hp.mollview(map=pooled_map, title='Pooled Map', cmap='viridis')
         hp.mollview(map=backprojected_map, title='Backprojected Map', cmap='viridis')
 
@@ -73,8 +202,8 @@ class SphericalPooling(LinearOperator):
         self._power = None if pooling_func == 'mean' else -2
         super(SphericalPooling, self).__init__(shape=(nside_out, nside_in), dtype=dtype)
 
-    def __call__(self, map: np.ndarray) -> np.ndarray:
-        return ud_grade(map_in=map, nside_out=self.nside_out, order_in=self.order_in, order_out=self.order_out,
+    def __call__(self, map_in: np.ndarray) -> np.ndarray:
+        return ud_grade(map_in=map_in, nside_out=self.nside_out, order_in=self.order_in, order_out=self.order_out,
                         dtype=self.dtype, power=self._power)
 
     def adjoint(self, pooled_map: np.ndarray) -> np.ndarray:
@@ -101,14 +230,14 @@ class SphericalHarmonicTransform(LinearOperator):
         n_max = 20
         nside = SHT.nmax2nside(n_max)
         rng = np.random.default_rng(0)
-        map = 100 * rng.binomial(n=1, p=0.01, size=int(hp.nside2npix(nside=nside)))
-        map = hp.smoothing(map, beam_window=np.ones(shape=(3*n_max//4,)))
+        map_in = 100 * rng.binomial(n=1, p=0.01, size=int(hp.nside2npix(nside=nside)))
+        map_in = hp.smoothing(map_in, beam_window=np.ones(shape=(3*n_max//4,)))
         sht = SHT(n_max=n_max)
-        anm = sht(map)
+        anm = sht(map_in)
         synth_map = sht.adjoint(anm)
-        hp.mollview(map=map, title='Input Map', cmap='viridis')
+        hp.mollview(map=map_in, title='Input Map', cmap='viridis')
         sht.plot_anm(anm)
-        hp.mollview(map=map, title='Synthesised Map', cmap='viridis')
+        hp.mollview(map=synth_map, title='Synthesised Map', cmap='viridis')
 
     Notes
     -----
@@ -199,13 +328,13 @@ class SphericalHarmonicTransform(LinearOperator):
         super(SphericalHarmonicTransform, self).__init__(shape=(self.coeffs_size, self.n_pix), dtype=np.float64,
                                                          lipschitz_cst=1)
 
-    def __call__(self, map: np.ndarray) -> np.ndarray:
+    def __call__(self, map_in: np.ndarray) -> np.ndarray:
         r"""
         Compute the spherical harmonic transform.
 
         Parameters
         ----------
-        map: np.ndarray
+        map_in: np.ndarray
             Bandlimited spherical map discretised on a critical RING ordered HEALPix mesh.
 
         Returns
@@ -213,7 +342,7 @@ class SphericalHarmonicTransform(LinearOperator):
         np.ndarray
             Spherical harmonic coefficients :math:`\{\hat{a}_n^m\}\subset\mathbb{C}`.
         """
-        return hp.map2alm(maps=map, lmax=self.n_max, use_weights=self.use_weights, verbose=self.verbose)
+        return hp.map2alm(maps=map_in, lmax=self.n_max, use_weights=self.use_weights, verbose=self.verbose)
 
     def adjoint(self, anm: np.ndarray, nside: Optional[int] = None) -> np.ndarray:
         r"""
@@ -303,7 +432,7 @@ class FourierLegendreTransform(LinearOperator):
     r"""
     Fourier Legendre Transform (FLT).
 
-    Compute the Fourier Legendre Transform of a function :math:`f:[0,\pi]\to\mathbb{C}`. This is useful for computing the
+    Compute the Fourier Legendre Transform of a function :math:`f:[-1,1]\to\mathbb{C}`. This is useful for computing the
     spherical harmonics coefficients of spherical zonal functions of the form :math:`g(\mathbf{r})=f(\langle\mathbf{r}, \mathbf{s}\rangle)`.
     Indeed, for such functions, we have:
 
@@ -327,22 +456,22 @@ class FourierLegendreTransform(LinearOperator):
         from pycsphere.linop import FLT
         import matplotlib.pyplot as plt
 
-        theta = np.linspace(0, np.pi, 4096)
-        b = (theta <= np.pi / 4)
-        flt = FLT(n_max=40, theta=theta)
+        t = np.linspace(-1, 1, 4096)
+        b = (np.arccos(t) <= np.pi / 4)
+        flt = FLT(n_max=40, t=t)
         bn = flt(b)
         trunc_fl_series = flt.adjoint(bn)
         plt.figure()
-        plt.plot(theta, b)
-        plt.xlabel('$\\theta$')
+        plt.plot(t, b)
+        plt.xlabel('$t$')
         plt.title('Original Signal')
         plt.figure()
         plt.stem(np.arange(flt.n_max + 1), bn)
         plt.xlabel('$n$')
         plt.title('Fourier-Legendre coefficients')
         plt.figure()
-        plt.plot(theta, trunc_fl_series)
-        plt.xlabel('$\\theta$')
+        plt.plot(t, trunc_fl_series)
+        plt.xlabel('$t$')
         plt.title('Truncated Fourier-Legendre Expansion')
 
     .. plot::
@@ -352,41 +481,37 @@ class FourierLegendreTransform(LinearOperator):
         from pycsphere.linop import FLT
         import matplotlib.pyplot as plt
 
-        theta = np.linspace(0, np.pi, 4096)
+        t = np.linspace(-1, 1, 4096)
         bn = np.ones(21)
-        flt = FLT(n_max=20, theta=theta)
+        flt = FLT(n_max=20, t=t)
         b = flt.adjoint(bn)
         plt.figure()
         plt.stem(np.arange(flt.n_max + 1), bn)
         plt.xlabel('$n$')
         plt.title('Fourier-Legendre coefficients')
         plt.figure()
-        plt.plot(theta, b)
-        plt.xlabel('$\\theta$')
+        plt.plot(t, b)
+        plt.xlabel('$t$')
         plt.title('Fourier-Legendre Expansion')
 
 
     Notes
     -----
-    Let :math:`\{P_{n,d}:[-1,1]\rightarrow\mathbb{C}, \, n\in\mathbb{N}\}` be the *Legendre polynomials*.
-    Then, any  function :math:`b\in\mathcal{L}^2([0, \pi], \mathbb{C})` admits a *Fourier-Legendre expansion* given by
+    Let :math:`\{P_{n}:[-1,1]\rightarrow\mathbb{C}, \, n\in\mathbb{N}\}` be the *Legendre polynomials*.
+    Then, any  function :math:`b\in\mathcal{L}^2([-1, 1], \mathbb{C})` admits a *Fourier-Legendre expansion* given by
 
     .. math::
 
-        b(\theta)\stackrel{a.e.}{=}\sum_{n=0}^{+\infty} \hat{b}_n\,\frac{2n+1}{4\pi} P_{n}(\cos\theta),
+        b(t)\stackrel{a.e.}{=}\sum_{n=0}^{+\infty} \hat{b}_n\,\frac{2n+1}{4\pi} P_{n}(t),
 
     where the *Fourier-Legendre coefficients* are given by the *Fourier-Legendre transform*
 
     .. math::
 
-        \hat{b}_n:=2\pi \int_{0}^\pi b(\theta) P_{n}(\cos\theta) sin\theta \,d\theta, \quad n\geq 0.
+        \hat{b}_n:=2\pi \int_{-1}^1 b(t) P_{n}(t) \,dt, \quad n\geq 0.
 
-    The Fourier-Legendre transform is computed with the routine
-    :py:func:`healpy.sphtfunc.beam2bl` which leverages a
+    This implementation of the Fourier-Legendre transform  leverages a
     recurrence relationship for computing efficiently Legendre polynomials, and a trapezoidal rule for approximating the integral.
-    The inverse (adjoint) Fourier-Legendre transform could be computed via the function :py:func:`healpy.sphtfunc.bl2beam` but the latter
-    has `a bug which discards the last coefficient <https://github.com/healpy/healpy/issues/666>`_.
-    We therefore propose a correct implementation here, pending a fix in the healpy library.
 
     Warnings
     --------
@@ -397,30 +522,40 @@ class FourierLegendreTransform(LinearOperator):
     :py:class:`~pycsphere.linop.FLT`, :py:class:`~pycsphere.linop.SphericalHarmonicTransform`
     """
 
-    def __init__(self, n_max: int, theta: np.ndarray, dtype: type = np.float64):
+    @classmethod
+    def nmax2t(cls, n_max: int, oversampling: float = 10.) -> np.ndarray:
+        r"""
+        Generate suitable samples ``t`` for a given ``n_max``.
+
+        Parameters
+        ----------
+        n_max: int
+            Maximal Fourier-Legendre coefficient index :math:`n`.
+        oversampling: float
+            Oversampling factor.
+        Returns
+        -------
+        np.ndarray
+            Samples ``t``.
+        """
+        critical_res = 4 * SHT.nmax2nside(n_max) - 1
+        return np.linspace(-1, 1, np.ceil(oversampling * critical_res).astype(int))
+
+    def __init__(self, n_max: int, t: np.ndarray, dtype: type = np.float64):
         r"""
 
         Parameters
         ----------
         n_max: int
             Maximal Fourier-Legendre coefficient index :math:`n`.
-        theta: np.ndarray
-            Grid of :math:`[0,\pi]` used to approximate the integral when computing the Fourier-Legendre coefficients.
+        t: np.ndarray
+            Grid of :math:`[-1,1]` used to approximate the integral when computing the Fourier-Legendre coefficients.
         dtype: type
             Data type of the operator.
-
-        Raises
-        ------
-        Warning
-            If the resolution of ``theta`` is too crude for the chosen ``n_max``.
         """
         self.n_max = n_max
-        self.theta = theta
-        self._nside = SphericalHarmonicTransform.nmax2nside(n_max)
-        self.min_resolution_theta = 4 * self._nside - 1
-        if self.min_resolution_theta > self.theta.size:
-            raise Warning('Resolution of the theta grid is too low. Consider increasing it for higher accuracy.')
-        super(FourierLegendreTransform, self).__init__(shape=(self.n_max, self.theta.size), dtype=dtype,
+        self.t = t
+        super(FourierLegendreTransform, self).__init__(shape=(self.n_max, self.t.size), dtype=dtype,
                                                        lipschitz_cst=1)
 
     def __call__(self, b: np.ndarray) -> np.ndarray:
@@ -430,14 +565,31 @@ class FourierLegendreTransform(LinearOperator):
         Parameters
         ----------
         b: np.ndarray
-            Function :math:`b` sampled at the points ``theta``.
+            Function :math:`b` sampled at the points ``t``.
 
         Returns
         -------
         np.ndarray
             The Fourier-Legendre coefficients :math:`\{\hat{b}_n, n=0,\ldots, n_{max}\}`.
         """
-        return hp.beam2bl(beam=b, theta=self.theta, lmax=self.n_max)
+
+        bn = np.zeros(self.n_max + 1)
+
+        p0 = 0 * self.t + 1
+        p1 = self.t.copy()
+
+        bn[0] = np.trapz(b * p0, self.t, dx=2 / self.t.size)
+        bn[1] = np.trapz(b * p1, self.t, dx=2 / self.t.size)
+
+        for n in np.arange(2, self.n_max + 1):
+            p2 = (self.t * p1 * (2 * n - 1) - p0 * (n - 1)) / n
+            bn[n] = np.trapz(b * p2, self.t, dx=2 / self.t.size)
+            p0 = p1
+            p1 = p2
+
+        bn *= 2 * np.pi
+
+        return bn
 
     def adjoint(self, bn: np.ndarray) -> np.ndarray:
         r"""
@@ -453,14 +605,13 @@ class FourierLegendreTransform(LinearOperator):
         np.ndarray
             The Fourier-Legendre series truncated at ``n_max``.
         """
-        x = np.cos(self.theta)
-        p0 = np.zeros(self.theta.size, dtype=np.dtype) + 1
-        p1 = x
+        p0 = 0 * self.t + 1
+        p1 = self.t.copy()
 
         b = bn[0] * p0 + bn[1] * p1 * 3
 
         for n in np.arange(2, self.n_max + 1):
-            p2 = (x * p1 * (2 * n - 1) - p0 * (n - 1)) / n
+            p2 = (self.t * p1 * (2 * n - 1) - p0 * (n - 1)) / n
             p0 = p1
             p1 = p2
             b += bn[n] * p2 * (2 * n + 1)
@@ -472,5 +623,5 @@ class FourierLegendreTransform(LinearOperator):
 
 FLT = FourierLegendreTransform
 
-if __name__ == '__main__':
+if __name__=='__main__':
     pass

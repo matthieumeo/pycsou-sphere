@@ -18,10 +18,10 @@ The package is organised as follows:
 
 1. The subpackage ``pycsphere.linop`` implements the following common spherical linear operators:
   
-   * Convolution operators: :py:class:`~pycsphere.linop.ZonalSphericalConvolution`, :py:class:`~pycsphere.linop.Zonal2ZonalSphericalConvolution`
-   * Spherical transforms and their inverse: :py:class:`~pycsphere.linop.SphericalHarmonicTransform`, :py:class:`~pycsphere.linop.iSphericalHarmonicTransform`, :py:class:`~pycsphere.linop.FourierLegendreTransform` and :py:class:`~pycsphere.linop.iFourierLegendreTransform`.
+   * Convolution operators
+   * Spherical transforms and their inverse.
 
-2. The subpackage ``pycsphere.mesh`` provides routines for generating spherical meshes: :py:class:`~pycsphere.mesh.FibonacciPointSet`, :py:class:`~pycsphere.mesh.HEALPixPointSet`, :py:class:`~pycsphere.mesh.RandomPointSet`.
+2. The subpackage ``pycsphere.mesh`` provides routines for generating spherical meshes.
 3. The subpackage ``pycsphere.green`` provides numerical routines for computing the Green  kernels of common spherical pseudo-differential operators.
 
 .. toctree::
