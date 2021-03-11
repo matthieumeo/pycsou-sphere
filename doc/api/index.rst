@@ -8,3 +8,9 @@ Pycsou-sphere API
    linop
    meshes
    green
+
+.. autosummary:: 
+
+	pycsphere.linop
+	pycsphere.mesh
+	pycsphere.green
