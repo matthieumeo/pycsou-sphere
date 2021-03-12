@@ -33,10 +33,10 @@ Pycsou-sphere is also available on `Pypi <https://pypi.org/project/pycsou-sphere
 If you have previously activated your conda environment ``pip`` will install Pycsou in said environment. Otherwise it will install it in your base environment together with the various dependencies obtained from the file ``requirements.txt``.
 
 
-Developper Install
+Developer Install
 ------------------
 
-It is also possible to install Pycsou-sphere from the source for developpers: 
+It is also possible to install Pycsou-sphere from the source for developers:
 
 
 .. code-block:: bash
