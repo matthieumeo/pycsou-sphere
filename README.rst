@@ -14,7 +14,7 @@ This module heavily relies and follows similar conventions as the `healpy <https
 Content
 =======
 
-The package is organised as follows:
+The package, named `pycsphere <https://pypi.org/project/pycsphere>`_,  is organised as follows:
 
 1. The subpackage ``pycsphere.linop`` implements the following common spherical linear operators:
   
@@ -27,11 +27,13 @@ The package is organised as follows:
 
 Installation
 ============
+
 Pycsou-sphere requires Python 3.6 or greater. It is developed and tested on x86_64 systems running MacOS and Linux.
 
 
 Dependencies
 ------------
+
 Before installing Pycsou-sphere, make sure that the base package `Pycsou <https://github.com/matthieumeo/pycsou>`_ is correctly installed on your machine.
 Installation instructions for Pycsou are available at `that link <https://matthieumeo.github.io/pycsou/html/general/install.html>`_.
 

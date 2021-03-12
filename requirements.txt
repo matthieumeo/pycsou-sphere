@@ -1,7 +1,7 @@
 healpy >= 1.14.*
 astropy >=  3.2.3
-pycsou >= 1.0.*
-pycsou-gsp >= 1.0.*
+pycsou >= 1.0.5
+pycgsp >= 1.0.3
 numpy >= 1.10
 scipy >= 1.5.*
 matplotlib >= 3.3.*
