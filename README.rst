@@ -1,4 +1,4 @@
-.. image:: doc/images/pycsou.png
+.. image:: https://matthieumeo.github.io/pycsou/html/_images/pycsou.png
   :width: 50 %
   :align: center
   :target: https://github.com/matthieumeo/pycsou-sphere
