@@ -1,4 +1,4 @@
-python == 3.6.*
+python >= 3.6.*
 healpy >= 1.14.*
 astropy >=  3.2.3
 numpy >= 1.10
