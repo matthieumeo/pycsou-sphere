@@ -1,6 +1,8 @@
 Spherical Meshes
 ================
 
+Module: ``pycsphere.mesh``
+
 .. automodule:: pycsphere.mesh
    :special-members: __init__
 

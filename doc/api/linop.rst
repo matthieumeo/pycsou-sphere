@@ -1,6 +1,8 @@
 Spherical Linear Operators
 ==========================
 
+Module: ``pycsphere.linop``
+
 .. automodule:: pycsphere.linop
    :special-members: __init__
 

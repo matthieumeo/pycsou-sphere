@@ -1,6 +1,8 @@
 Zonal Green Kernels
 ===================
 
+Module: ``pycsphere.green``
+
 .. automodule:: pycsphere.green
    :special-members: __init__
 
